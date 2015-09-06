@@ -64,8 +64,10 @@ func count(name, url string) {
 			if i == 0 {
 				firstPkt = time.Since(lastPkt).Nanoseconds()
 				latency := time.Since(reqEndTime).Nanoseconds()
-				fmt.Printf("%s: Request start to First %d bytes in [%d]\n", name, n, firstPkt)
-				fmt.Printf("%s: Response latency to first %d bytes from request end time: [%d]\n", name, n, latency)
+				latencyMs := time.Since(reqEndTime).String()
+				fmt.Printf("%s: Request start timestamp [%d]\n", name, firstPkt)
+				fmt.Printf("%s: Response latency to first %d bytes from request end time(ns): [%d]\n", name, n, latency)
+				fmt.Printf("%s: First packet latency in ms: %s\n", name, latencyMs)
 				timings = append(timings, latency)
 
 			} else {
@@ -73,8 +75,10 @@ func count(name, url string) {
 				interPkt := time.Since(lastPkt).Nanoseconds()
 				timings = append(timings, interPkt)
 
-				fmt.Printf("[%16d] bytes in [%16d] w/ latency [%16d]\n", n, curPkt, interPkt)
-
+				// only print a limited number
+				if (i % 10) == 0 {
+					fmt.Printf("[%16d] bytes at timestamp [%13d] w/ latency (ns) [%12d]\n", n, curPkt, interPkt)
+				}
 			}
 
 			//			fmt.Printf("Variance from last packet: [%d]\n", time.Since(lastPkt).Nanoseconds())
@@ -104,19 +108,22 @@ func count(name, url string) {
 		}
 		avg = c / int64(l)
 
-		fmt.Printf("min: %d | avg: %d | max: %d\n", min, avg, max)
-
+		// only need to see the last
+		if i == (l - 1) {
+			fmt.Printf("Inter Packet Delay Stats in ns: [min: %d | avg: %d | max: %d]\n", min, avg, max)
+		}
 	}
-	fmt.Printf("%s %d [%.2fs]\n", name, n, time.Since(start).Seconds())
 
-	fmt.Printf("It only took me: %s \n", time.Since(start).String())
+	fmt.Printf("Site: %s delivered %d bytes in:[%.2fs]\n", name, n, time.Since(start).Seconds())
+
+	fmt.Printf("In milliseconds: %s \n", time.Since(start).String())
 
 }
 
 func do(f func(Site)) {
 	// populate our struct w/ some data
-	site := Site{"Google", "http://www.google.com/"}
-	//site := Site{"Xfinity", "http://xfinity.comcast.net/"}
+	//site := Site{"Google", "http://www.google.com/"}
+	site := Site{"Xfinity", "http://xfinity.comcast.net/"}
 
 	f(site)
 
